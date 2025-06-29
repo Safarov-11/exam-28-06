@@ -1,0 +1,87 @@
+@page "/tables/edit/{id:int}"
+@inject ITableService tableService
+@inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Components.Forms
+@rendermode InteractiveServer
+
+<div style="
+    background: linear-gradient(135deg, #fff8dc, #ffeeba);
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 500px;
+    margin: 80px auto;
+    box-shadow: 0 4px 12px rgba(218, 165, 32, 0.4);
+    color: #333;
+">
+    <h2 style="text-align: center; margin-bottom: 20px;">Edit Table</h2>
+
+    <EditForm Model="updateTable" OnValidSubmit="TableEdit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Table Number</label>
+            <InputNumber @bind-Value="updateTable.Number" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Seats</label>
+            <InputNumber @bind-Value="updateTable.Seats" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Is Reserved</label>
+            <InputRadioGroup @bind-Value="updateTable.IsReserved">
+                <div class="form-check form-check-inline">
+                    <InputRadio class="form-check-input" Value="true" />
+                    <label class="form-check-label">Yes</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <InputRadio class="form-check-input" Value="false" />
+                    <label class="form-check-label">No</label>
+                </div>
+            </InputRadioGroup>
+        </div>
+
+        <div style="display: flex; justify-content: space-between;">
+            <button class="btn btn-warning" type="submit" style="min-width: 100px;">Save</button>
+            <a href="/tables" class="btn btn-secondary" style="min-width: 100px;">Cancel</a>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    UpdateTableDTO updateTable = new();
+    GetTableDTO table = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await tableService.GetTableAsync(Id);
+        if (response.Data is not null)
+        {
+            table = response.Data;
+            updateTable.Id = table.Id;
+            updateTable.Number = table.Number;
+            updateTable.Seats = table.Seats;
+            updateTable.IsReserved = table.IsReserved;
+        }
+        else
+        {
+            Navigation.NavigateTo("/tables/eror");
+        }
+    }
+
+    async Task TableEdit()
+    {
+        var response = await tableService.UpdateTableAsync(updateTable);
+        if (!response.IsSuccess)
+        {
+            Navigation.NavigateTo("/tables/eror");
+            return;
+        }
+
+        Navigation.NavigateTo("/tables");
+    }
+}

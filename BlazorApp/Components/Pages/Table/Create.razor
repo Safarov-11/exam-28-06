@@ -1,0 +1,46 @@
+@page "/tables/create"
+@inject ITableService tableService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<div style="
+    background: linear-gradient(135deg, #fff8dc, #ffeeba);
+    border-radius: 12px;
+    padding: 30px;
+    width: 40%;
+    margin: 80px auto;
+    box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
+    color: #333;
+">
+
+    <h2 style="text-align: center; margin-bottom: 20px;">Create New table</h2>
+
+    <EditForm Model="table" FormName="CreateTable" OnSubmit="TableCreate">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <label for="num" class="form-label">Table Number</label>
+        <InputNumber id="num" @bind-Value="table.Number" class="form-control mb-3" placeholder="Table number" />
+        <label for="seats" class="form-label">Seats</label>
+        <InputNumber id="seats" @bind-Value="table.Seats" class="form-control mb-3" placeholder="Table seats" />
+
+        <div style="display: flex; justify-content: space-between;">
+            <button class="btn btn-success" style="min-width: 100px;">Create</button>
+            <a href="/tables" class="btn btn-secondary" style="min-width: 100px;">Cancel</a>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    CreateTableDTO table = new();
+
+    async Task TableCreate()
+    {
+        var response = await tableService.AddTableAsync(table);
+        if (!response.IsSuccess)
+        {
+            Navigation.NavigateTo("tables/eror");
+            return;
+        }
+        Navigation.NavigateTo("/tables");
+    }
+}

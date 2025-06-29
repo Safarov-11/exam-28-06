@@ -1,0 +1,44 @@
+@page "/customers/create"
+@inject ICustomerService customerService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<div style="
+    background: linear-gradient(135deg, #fff8dc, #ffeeba);
+    border-radius: 12px;
+    padding: 30px;
+    width: 40%;
+    margin: 80px auto;
+    box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
+    color: #333;
+">
+
+    <h2 style="text-align: center; margin-bottom: 20px;">Create New Customer</h2>
+
+    <EditForm Model="customer" FormName="CreateCustomer" OnSubmit="CustomerCreate">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <InputText @bind-Value="customer.FullName" class="form-control mb-3" placeholder="Full Name" />
+        <InputText @bind-Value="customer.Phone" class="form-control mb-3" placeholder="Phone" />
+
+        <div style="display: flex; justify-content: space-between;">
+            <button class="btn btn-success" style="min-width: 100px;">Create</button>
+            <a href="/customers" class="btn btn-secondary" style="min-width: 100px;">Cancel</a>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    CreateCustomerDTO customer = new();
+
+    async Task CustomerCreate()
+    {
+        var response = await customerService.AddCustomerAsync(customer);
+        if (!response.IsSuccess)
+        {
+            Navigation.NavigateTo("customers/eror");
+            return;
+        }
+        Navigation.NavigateTo("/customers");
+    }
+}

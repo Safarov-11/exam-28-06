@@ -1,0 +1,113 @@
+@page "/reservations/edit/{Id:int}"
+@inject IReservationService reservationService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<div style="
+    background: linear-gradient(135deg, #fff8dc, #ffeeba);
+    border-radius: 12px;
+    padding: 30px;
+    width: 40%;
+    margin: 80px auto;
+    box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
+    color: #333;
+">
+    <h2 style="text-align: center; margin-bottom: 20px;">Edit reservation</h2>
+
+    @if (isLoading)
+    {
+        <p>Loading...</p>
+    }
+    else if (loadError)
+    {
+        <p class="text-danger">Error loading reservation data.</p>
+    }
+    else
+    {
+        <EditForm Model="updateReservation" OnValidSubmit="ReservationEdit" FormName="ReservationEdit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <label>Customer ID :</label>
+            <InputNumber @bind-Value="updateReservation.CustomerId" class="form-control mb-3" disabled />
+
+            <label>Table ID:</label>
+            <InputNumber @bind-Value="updateReservation.TableId" class="form-control mb-3" disabled />
+
+            <label>From Date and Time:</label>
+            <InputText @bind-Value="fromDateString" type="datetime-local" class="form-control mb-3" />
+
+            <label>To Date and Time:</label>
+            <InputText @bind-Value="toDateString" type="datetime-local" class="form-control mb-3" />
+
+            <div style="display: flex; justify-content: space-between;">
+                <button type="submit" class="btn btn-warning" style="min-width: 100px;">Save</button>
+                <a href="/reservations" class="btn btn-secondary" style="min-width: 100px;">Cancel</a>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    UpdateReservationDTO updateReservation = new();
+
+    bool isLoading = true;
+    bool loadError = false;
+
+    string? fromDateString
+    {
+        get => updateReservation.FromDate == default ? null : updateReservation.FromDate.ToString("yyyy-MM-ddTHH:mm");
+        set
+        {
+            if (DateTime.TryParse(value, out var dt))
+                updateReservation.FromDate = dt;
+        }
+    }
+
+    string? toDateString
+    {
+        get => updateReservation.ToDate == default ? null : updateReservation.ToDate.ToString("yyyy-MM-ddTHH:mm");
+        set
+        {
+            if (DateTime.TryParse(value, out var dt))
+                updateReservation.ToDate = dt;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        loadError = false;
+
+        var response = await reservationService.GetReservationAsync(Id);
+        var reservation = response.Data;
+
+        if (reservation != null)
+        {
+            updateReservation.Id = reservation.Id;
+            updateReservation.CustomerId = reservation.CustomerId;
+            updateReservation.TableId = reservation.TableId;
+            updateReservation.FromDate = reservation.FromDate;
+            updateReservation.ToDate = reservation.ToDate;
+        }
+        else
+        {
+            loadError = true;
+        }
+
+        isLoading = false;
+    }
+
+    async Task ReservationEdit()
+    {
+        var response = await reservationService.UpdateReservationAsync(updateReservation);
+        if (!response.IsSuccess)
+        {
+            Navigation.NavigateTo("/reservations/error");
+            return;
+        }
+        Navigation.NavigateTo("/reservations");
+    }
+}
